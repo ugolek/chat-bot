@@ -1,5 +1,4 @@
 from llama_index.indices.postprocessor import MetadataReplacementPostProcessor
-import logging
 from llama_index import VectorStoreIndex
 from llama_index.node_parser import SentenceWindowNodeParser
 from llama_index.embeddings import OpenAIEmbedding
@@ -7,13 +6,14 @@ from llama_index.llms import OpenAI
 from llama_index import ServiceContext
 from langchain.embeddings import HuggingFaceEmbeddings
 from llama_index.vector_stores import PineconeVectorStore
+from streamlit_chat import message
 import os
 import openai
 import streamlit as st
 import pinecone
-import requests
 
-os.environ["OPENAI_API_KEY"] = "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"
+
+os.environ["OPENAI_API_KEY"] = "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"
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 
@@ -65,54 +65,54 @@ query_engine = index.as_query_engine(
         MetadataReplacementPostProcessor(target_metadata_key="window")
     ],
 )
+# Test block for check window and sentence
+# window_response = query_engine.query("what is Papers Clubs how add new one")
 
-window_response = query_engine.query("what is Papers Clubs how add new one")
+# window = window_response.source_nodes[0].node.metadata["window"]
+# sentence = window_response.source_nodes[0].node.metadata["original_text"]
 
-window = window_response.source_nodes[0].node.metadata["window"]
-sentence = window_response.source_nodes[0].node.metadata["original_text"]
-
-print(f"Window: {window}")
-print("------------------")
-print(f"Original Sentence: {sentence}")
+# print(f"Window: {window}")
+# print("------------------")
+# print(f"Original Sentence: {sentence}")
 # st.set_page_config(
 #     page_title="Gathers Chat",
 #     page_icon=":robot:"
 # )
 
-# st.header("Gathers Chat")
+st.header("Gathers Chat")
 
-# if 'generated' not in st.session_state:
-#     st.session_state['generated'] = []
+if 'generated' not in st.session_state:
+    st.session_state['generated'] = []
 
-# if 'past' not in st.session_state:
-#     st.session_state['past'] = []
-
-
-# def query(payload):
-#     response = query_engine.query(payload)
-#     print(response);
-#     return response.response
+if 'past' not in st.session_state:
+    st.session_state['past'] = []
 
 
-# def get_text():
-#     input_text = st.text_input("You: ", "", key="input")
-#     return input_text
+def query(payload):
+    response = query_engine.query(payload)
+    print(response);
+    return response.response
 
 
-# user_input = get_text()
-# # user_input = 'what is Papers Clubs'
+def get_text():
+    input_text = st.text_input("You: ", "", key="input")
+    return input_text
 
-# if user_input:
-#     output = query(user_input)
 
-#     st.session_state.past.append(user_input)
-#     st.session_state.generated.append(output)
+user_input = get_text()
+# user_input = 'what is Papers Clubs'
 
-# if st.session_state['generated']:
+if user_input:
+    output = query(user_input)
 
-#     for i in range(len(st.session_state['generated'])-1, -1, -1):
-#         print('||||||||generated|||||||', st.session_state['generated'])
-#         print('||||||||past|||||||', st.session_state['past'])
-#         message(st.session_state["generated"][i], key=str(i))
-#         message(st.session_state['past'][i],
-#                 is_user=True, key=str(i) + '_user')
+    st.session_state.past.append(user_input)
+    st.session_state.generated.append(output)
+
+if st.session_state['generated']:
+
+    for i in range(len(st.session_state['generated'])-1, -1, -1):
+        print('||||||||generated|||||||', st.session_state['generated'])
+        print('||||||||past|||||||', st.session_state['past'])
+        message(st.session_state["generated"][i], key=str(i))
+        message(st.session_state['past'][i],
+                is_user=True, key=str(i) + '_user')

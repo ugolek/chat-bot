@@ -6,7 +6,6 @@ from llama_index.embeddings import OpenAIEmbedding
 from llama_index.llms import OpenAI
 from llama_index import ServiceContext, set_global_service_context
 from langchain.embeddings import HuggingFaceEmbeddings
-from streamlit_chat import message
 from llama_index.storage.storage_context import StorageContext
 from llama_index.vector_stores import PineconeVectorStore
 import os
