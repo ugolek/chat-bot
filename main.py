@@ -13,14 +13,14 @@ import streamlit as st
 import pinecone
 
 
-os.environ["OPENAI_API_KEY"] = "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"
-openai.api_key = os.environ["OPENAI_API_KEY"]
 
+
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Initialize Pinecone
 print("Initializing Pinecone...")
-pinecone.init(api_key="cb0cdcdf-2076-415d-a700-fd16c759e973",
-              environment="us-west4-gcp-free")
+pinecone.init(api_key=st.secrets["PINECONE_API"],
+              environment=st.secrets["PINECONE_ENVIRONMENT"])
 index_name = "chatbot-index"
 
 # Check if the index exists.
