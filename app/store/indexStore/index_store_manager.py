@@ -13,11 +13,13 @@ class IndexStoreManager:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
-    def get_or_create(self, index_store_type='MongoIndexStore'):
-        return self._create(index_store_type)
-    
-    def _create (self, index_name, index_store_type):
+    def get_or_create(index_store_type='MongoIndexStore'):
         if index_store_type == 'MongoIndexStore':
-            return MongoIndexStoreFabric.get_index_store(index_name)
+            return MongoIndexStoreFabric.get_index_store()
         else:
             raise Exception('Unsupported index store type')
+    
+  
+        
+IndexStoreManager.get_or_create = staticmethod(
+    IndexStoreManager.get_or_create)

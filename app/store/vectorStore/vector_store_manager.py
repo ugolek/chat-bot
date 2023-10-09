@@ -11,11 +11,10 @@ class VectorStoreManager:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
     
-    def create (index_name, vector_store_type = 'PineconeVectorStore'):
+    @staticmethod
+    def get_or_create (index_name, vector_store_type = 'PineconeVectorStore', namespace=None):
         if vector_store_type == 'PineconeVectorStore':
-            return PineconeVectorStoreFabric.get_vector_store(index_name)
+            return PineconeVectorStoreFabric.get_vector_store(index_name, namespace)
         else:
             raise Exception('Unsupported vector store type')
             
-VectorStoreManager.create = staticmethod(
-    VectorStoreManager.create)

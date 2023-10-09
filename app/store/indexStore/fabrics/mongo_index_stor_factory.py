@@ -6,16 +6,13 @@ import pinecone
 class MongoIndexStoreFabric:
     _instance = None
 
-    def __init__(self):
-        if not hasattr(self, 'initialized'):
-            self.mongo_uri = os.environ["MONGO_URI"]
-            self.mongo_db_name = os.environ["MONGO_DB"]
-            self.initialized = True
+    def get_index_store():
+        mongo_uri = os.environ["MONGO_URI"]
+        mongo_db_name = os.environ["MONGO_DB"]
 
-    def get_index_store(self):
         return MongoIndexStore.from_uri(
-            uri=self.mongo_uri,
-            db_name=self.mongo_db_name)
+            uri=mongo_uri,
+            db_name=mongo_db_name)
 
 
 MongoIndexStoreFabric.get_index_store = staticmethod(

@@ -4,7 +4,7 @@ import pinecone
 
 
 class PineconeVectorStoreFabric:
-    def get_vector_store(index_name):
+    def get_vector_store(index_name, namespace=None):
         api_key = os.environ["PINECONE_API"]
         environment = os.environ["PINECONE_ENVIRONMENT"]
 
@@ -13,14 +13,15 @@ class PineconeVectorStoreFabric:
         if index_name not in pinecone.list_indexes():
             print(f"Index {index_name} not found, creating it...")
             pinecone.create_index(
-                index_name, metric="cosine", shards=1, dimension=768)
+                index_name, metric="cosine", shards=1, dimension=1536)
             print(f"Index {index_name} created.")
         else:
             print(f"Index {index_name} already exists.")
+        
 
         pinecone_index = pinecone.Index(index_name=index_name)
 
-        return PineconeVectorStore(pinecone_index=pinecone_index)
+        return PineconeVectorStore(pinecone_index=pinecone_index, namespace=namespace)
 
 
 PineconeVectorStoreFabric.get_vector_store = staticmethod(
