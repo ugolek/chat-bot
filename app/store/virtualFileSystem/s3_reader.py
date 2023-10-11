@@ -10,6 +10,11 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from llama_index import download_loader
 from llama_index.readers.base import BaseReader
 from llama_index.readers.schema.base import Document
+from llama_index import SimpleDirectoryReader
+import tempfile
+from pathlib import Path
+import uuid
+import boto3
 
 
 class S3Reader(BaseReader):
@@ -79,57 +84,45 @@ class S3Reader(BaseReader):
 
     def load_data(self) -> List[Document]:
         """Load file(s) from S3."""
-        import boto3
-
         s3 = boto3.resource("s3")
         s3_client = boto3.client("s3")
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            if self.key:
-                suffix = Path(self.key).suffix
-                filepath = f"{temp_dir}/{next(tempfile._get_candidate_names())}{suffix}"
-                s3_client.download_file(self.bucket, self.key, filepath)
-            else:
-                bucket = s3.Bucket(self.bucket)
-                for i, obj in enumerate(bucket.objects.filter(Prefix=self.prefix)):
-                    if self.num_files_limit is not None and i > self.num_files_limit:
-                        break
+            # Convert temp_dir to a pathlib.Path object for easier manipulation
+            temp_dir_path = Path(temp_dir)
 
-                    suffix = Path(obj.key).suffix
+            bucket = s3.Bucket(self.bucket)
+            for i, obj in enumerate(bucket.objects.filter(Prefix=self.prefix)):
+                if self.num_files_limit is not None and i > self.num_files_limit:
+                    break
 
-                    is_dir = obj.key.endswith("/")  # skip folders
-                    is_bad_ext = (
-                        self.required_exts is not None
-                        and suffix not in self.required_exts  # skip other extentions
-                    )
+                filename = Path(obj.key).name
+                real_filepath = str(Path(obj.key).parent)
 
-                    if is_dir or is_bad_ext:
-                        continue
 
-                    filepath = (
-                        f"{temp_dir}/{next(tempfile._get_candidate_names())}{suffix}"
-                    )
-                    s3_client.download_file(self.bucket, obj.key, filepath)
+                unique_name = f"___{real_filepath}/{filename}"
+                filepath = temp_dir_path / unique_name  # Use the / operator to join paths
 
-            try:
-                from llama_index import SimpleDirectoryReader
-            except ImportError:
-                custom_reader_path = self.custom_reader_path
+                is_dir = obj.key.endswith("/")  # skip folders
+                is_bad_ext = (
+                    self.required_exts is not None
+                    and filepath.suffix not in self.required_exts  # skip other extensions
+                )
 
-                if custom_reader_path is not None:
-                    SimpleDirectoryReader = download_loader(
-                        "SimpleDirectoryReader", custom_path=custom_reader_path
-                    )
-                else:
-                    SimpleDirectoryReader = download_loader("SimpleDirectoryReader")
+                if is_dir or is_bad_ext:
+                    continue
+
+                filepath.parent.mkdir(parents=True, exist_ok=True)
+                s3_client.download_file(self.bucket, obj.key, str(filepath))
 
             loader = SimpleDirectoryReader(
-                temp_dir,
+                str(temp_dir_path),
                 file_extractor=self.file_extractor,
                 required_exts=self.required_exts,
                 filename_as_id=self.filename_as_id,
                 num_files_limit=self.num_files_limit,
                 file_metadata=self.file_metadata,
+                recursive=True,
             )
 
             return loader.load_data()

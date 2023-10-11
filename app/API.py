@@ -9,8 +9,24 @@ main_service = MainService()
 
 
 @app.post("/space/create-space/")
-async def create_space(client_name: str = Form(...), space_name: str = Form(...),  files: list[UploadFile] = File(...)):
-    await main_service.create_namespace(files, client_name, space_name)
+async def create_space(
+        client_name: str = Form(...),
+        space_name: str = Form(...),
+        files: list[UploadFile] = File(...),
+        path: str = Form(...)
+):
+    await main_service.upload_files_to_namespace(files, client_name, space_name, path)
+    return {"status": "updated", "name": client_name, space_name: space_name}
+
+
+@app.post("/space/upload-files/")
+async def upload_files_to_space(
+        client_name: str = Form(...),
+        space_name: str = Form(...),
+        files: list[UploadFile] = File(...),
+        path: str = Form(...)
+):
+    await main_service.upload_files_to_namespace(files, client_name, space_name, path)
     return {"status": "updated", "name": client_name, space_name: space_name}
 
 
@@ -25,7 +41,6 @@ async def ask_index(client_name: str, namespace: str, question: str):
     answer = main_service.ask_namespace(question, client_name, namespace)
 
     return {"status": "ok", "answer": answer}
-
 
 
 # @app.post("/l_index/")
