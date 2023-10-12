@@ -30,6 +30,6 @@ def init_global_service_context():
         include_metadata=True,
     )
 
-    service_context = ServiceContext.from_defaults(llm=llm)
+    service_context = ServiceContext.from_defaults(llm=llm, node_parser=node_parser)
 
     set_global_service_context(service_context)

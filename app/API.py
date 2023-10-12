@@ -38,9 +38,16 @@ async def upload_files_to_space(
 
 @app.post("/space/ask/")
 async def ask_index(client_name: str, namespace: str, question: str):
-    answer = main_service.ask_namespace(question, client_name, namespace)
+    answer = main_service.ask_namespace(question, namespace)
 
     return {"status": "ok", "answer": answer}
+
+
+@app.post("/space/ask_with_retriever/")
+async def ask_with_retriever(client_name: str, namespace: str, question: str):
+    response = main_service.ask_namespace_with_retriever(question, namespace)
+
+    return {"status": "ok", "response": response, }
 
 
 # @app.post("/l_index/")

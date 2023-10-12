@@ -62,10 +62,14 @@ class IndexManager:
         index.set_index_id(namespace)
         index.storage_context.persist(namespace)
 
-    def ask_index(self, question: str, client_name: str, namespace: str):
+    def get_index(self, namespace):
         sc = self.get_storage_context(namespace)
         index = load_index_from_storage(sc, namespace)
-        # and perform the query
+
+        return index
+
+    def ask_index(self, question: str, namespace: str):
+        index = self.get_index(namespace)
         query = index.as_query_engine()
 
         return query.query(question)
