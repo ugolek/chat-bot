@@ -1,9 +1,13 @@
-from llama_index import GPTVectorStoreIndex, SimpleDirectoryReader, StorageContext, VectorStoreIndex, download_loader, load_index_from_storage
+from llama_index import StorageContext, SummaryIndex, VectorStoreIndex, download_loader, get_response_synthesizer, load_index_from_storage, load_indices_from_storage
 from llama_index.node_parser import SimpleNodeParser
 from store.virtualFileSystem.s3_service import S3Service
 from store.vectorStore.fabrics.pinecone_vector_store_fabric import PineconeVectorStoreFabric
 from llama_index.storage.docstore import MongoDocumentStore
 from store.indexStore.index_store_manager import IndexStoreManager
+from llama_index.tools import QueryEngineTool, ToolMetadata
+from llama_index.agent import OpenAIAgent
+from llama_index.llms import OpenAI
+from llama_index.indices.base import BaseIndex
 
 from store.vectorStore.vector_store_manager import VectorStoreManager
 import os
@@ -36,15 +40,6 @@ class IndexManager:
 
         return storage_context
 
-    # def create_namespace(client_name, namespace):
-    #     vector_store = VectorStoreManager.get_or_create(client_name, namespace=namespace)
-    #     doc_summary_index = GPTVectorStoreIndex.from_vector_store(
-    #         vector_store = vector_store,
-    #         show_progress=True,
-    #     )
-
-    #     return doc_summary_index
-
     async def upload_data_to_index_namespace(self, client_name, namespace):
         # client_path = self.file_system_service.get_path(client_name, namespace)
 
@@ -53,18 +48,38 @@ class IndexManager:
 
         storage_context = self.get_storage_context(namespace)
 
-        index = GPTVectorStoreIndex.from_documents(
-            documents,
-            storage_context=storage_context,
-            show_progress=True,
-        )
+        for doc in documents:
+            vector_index = VectorStoreIndex.from_documents(
+                (doc,),
+                storage_context=storage_context,
+                show_progress=True,
+            )
 
-        index.set_index_id(namespace)
-        index.storage_context.persist(namespace)
+            # build summary index
+            summary_index = SummaryIndex.from_documents(
+                [doc],
+                storage_context=storage_context,
+                show_progress=True,
+            )
 
-    def get_index(self, namespace):
+            vector_index.set_index_id('vector_index:' + doc.get_doc_id())
+            summary_index.set_index_id('summary_index:' + doc.get_doc_id())
+
+    def get_index(self, namespace) -> BaseIndex:
         sc = self.get_storage_context(namespace)
         index = load_index_from_storage(sc, namespace)
+
+        return index
+
+    def get_indices(self, namespace) -> list[BaseIndex]:
+        sc = self.get_storage_context(namespace)
+        indices = load_indices_from_storage(sc)
+
+        return indices
+
+    def get_vector_index(self, namespace):
+        sc = self.get_storage_context(namespace)
+        index = VectorStoreIndex.from_vector_store(sc.vector_store, namespace)
 
         return index
 

@@ -45,7 +45,7 @@ async def ask_index(client_name: str, namespace: str, question: str):
 
 @app.post("/space/ask_with_retriever/")
 async def ask_with_retriever(client_name: str, namespace: str, question: str):
-    response = main_service.ask_namespace_with_retriever(question, namespace)
+    response = main_service.ask_namespace_with_recursive_retriever(question, namespace)
 
     return {"status": "ok", "response": response, }
 
